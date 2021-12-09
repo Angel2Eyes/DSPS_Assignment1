@@ -51,32 +51,36 @@
             <artifactId>sqs</artifactId>
         </dependency>
 
+        <!-- Dependencies for PDF editing -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.0-alpha2</version>
+        </dependency>
 
-<!--        &lt;!&ndash; Dependencies for sarcasm analysis &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>edu.stanford.nlp</groupId>-->
-<!--            <artifactId>stanford-corenlp</artifactId>-->
-<!--            <version>3.3.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>fontbox</artifactId>
+            <version>3.0.0-alpha2</version>
+        </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>edu.stanford.nlp</groupId>-->
-<!--            <artifactId>stanford-corenlp</artifactId>-->
-<!--            <version>3.3.0</version>-->
-<!--            <classifier>models</classifier>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>xmpbox</artifactId>
+            <version>3.0.0-alpha2</version>
+        </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>de.jollyday</groupId>-->
-<!--            <artifactId>jollyday</artifactId>-->
-<!--            <version>0.4.7</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>preflight</artifactId>
+            <version>3.0.0-alpha2</version>
+        </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.googlecode.efficient-java-matrix-library</groupId>-->
-<!--            <artifactId>ejml</artifactId>-->
-<!--            <version>0.23</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-tools</artifactId>
+            <version>3.0.0-alpha2</version>
+        </dependency>
 
         <!-- SLF4J -->
         <dependency>
@@ -129,10 +133,7 @@
             <artifactId>jaxb-osgi</artifactId>
             <version>2.2.7</version>
         </dependency>
-
     </dependencies>
-
-
     <build>
         <plugins>
             <plugin>

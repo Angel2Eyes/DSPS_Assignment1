@@ -4,6 +4,7 @@ import awsService.*;
 
 import org.apache.commons.io.FileUtils;
 
+import org.json.simple.JSONArray;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -42,18 +43,19 @@ public class LocalApplication {
 
     private static void runApplication(String inputFileName, String outputFileName, int N, boolean terminate) throws IOException, ParseException {
         String id = Long.toString(System.currentTimeMillis());
-        StorageService s3 = new StorageService("bucket-dsps");
+        StorageService s3 = new StorageService("bucket-dsps1");
         SimpleQueueService sqs_to_manager = new SimpleQueueService("queue-to-manager");
         SimpleQueueService sqs_from_manager = new SimpleQueueService("queue-from-manager");
 
         // 1. Upload Manager code to S3
-        //s3.uploadFile("target/Manager/Manager.jar", "Manager.jar");
+        s3.uploadFile("target/Manager/Manager.jar", "Manager.jar");
 
         // 2. Upload Worker code to S3
-        s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
+        //s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
 
         // 3. Upload Input File for Manager
-        s3.uploadFile("Input_Files/" + inputFileName + ".txt", "input-" + id);
+        textToJSON("Input_Files/" + inputFileName + ".txt", "Input_Files/" + inputFileName + "_json.txt");
+        s3.uploadFile("Input_Files/" + inputFileName + "_json.txt", "input-" + id);
 
         // 4. Upload services location to s3 for the manager
         FileUtils.deleteQuietly(new File("services-manager"));
@@ -295,6 +297,23 @@ public class LocalApplication {
             report_location = (String) obj.get("report-file-location");
             task_id = (String) obj.get("task-id");
         }
+    }
+    private static void textToJSON(String source, String destination) throws IOException, ParseException {
+        BufferedReader sourceReader = new BufferedReader(new FileReader(source));
+        PrintWriter pw = new PrintWriter(destination);
+        JSONArray jsonArray = new JSONArray();
+        String line = sourceReader.readLine();
+        while (line != null) {
+            String[] words = line.split("\t", -1);
+            JSONObject obj = new JSONObject();
+            obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
+            obj.put("original", words[1]);
+            jsonArray.add(obj.toJSONString());
+            line = sourceReader.readLine();
+            pw.println(obj.toString());
+        }
+        pw.close();
+        sourceReader.close();
     }
 }
 

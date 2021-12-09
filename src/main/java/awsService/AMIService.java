@@ -113,7 +113,7 @@ public class AMIService {
                 .minCount(1)                                // Min number of instances to create (in our case 1)
                 .userData(userData)                         // User data -> bash code to run during initialization
                 .keyName("vockey")                          // SSH to access to the instance when created
-                .securityGroupIds("sg-0b8a628d851e6e894")            // Security group (what ports and protocols are available)
+                .securityGroupIds("sg-0ee64cbf5a8edb5cd")            // Security group (what ports and protocols are available)
                 .iamInstanceProfile(role)                   // Policies
                 .build();
 

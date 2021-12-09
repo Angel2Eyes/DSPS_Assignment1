@@ -210,20 +210,33 @@ public class Manager {
          * @throws IOException    The {@code file} is missing
          * @throws ParseException The {@code file} isn't a JSON
          */
+//        private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
+//            LinkedList<String> jobs = new LinkedList<>();
+//
+//            //JSONParser parser = new JSONParser();
+//            BufferedReader reader = new BufferedReader(new FileReader(file));
+//            String line = reader.readLine();
+//            while (line != null) {
+//                String[] words = line.split(" ", -1);
+//                JSONObject obj = new JSONObject();
+//                obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
+//                obj.put("original", words[1]);
+//                jobs.add(obj.toJSONString());
+//                // JSONArray reviews = (JSONArray) ((JSONObject) parser.parse(line)).get("reviews");
+//                // for (Object o : reviews) jobs.add(((JSONObject) o).toJSONString());
+//                line = reader.readLine();
+//            }
+//            reader.close();
+//            return jobs;
+//        }
         private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
-            LinkedList<String> jobs = new LinkedList<>();
-
-            //JSONParser parser = new JSONParser();
+            LinkedList<String> jobs = new LinkedList<String>();
+            JSONParser parser = new JSONParser();
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line = reader.readLine();
             while (line != null) {
-                String[] words = line.split(" ", -1);
-                JSONObject obj = new JSONObject();
-                obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
-                obj.put("original", words[1]);
-                jobs.add(obj.toJSONString());
-                // JSONArray reviews = (JSONArray) ((JSONObject) parser.parse(line)).get("reviews");
-                // for (Object o : reviews) jobs.add(((JSONObject) o).toJSONString());
+                Object obj =  parser.parse(line);
+                jobs.add(((JSONObject)obj).toJSONString());
                 line = reader.readLine();
             }
             reader.close();

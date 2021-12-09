@@ -18,8 +18,7 @@ public class Worker implements Runnable {
 
     private static String sqs_to_manager_name;
     private static String sqs_from_manager_name;
-
-    //private static ReviewAnalysisHandler handler;
+    private static PDFOperationHandler handler;
 
     public static void main(String[] args) throws IOException, ParseException {
         // Get the names of the AWS instances
@@ -36,7 +35,7 @@ public class Worker implements Runnable {
         sqs_from_manager_name = (String) jsonObj.get("sqs-from-manager");
 
         // Initialize the Review Analysis Handler
-        //handler = new ReviewAnalysisHandler();
+        handler = new PDFOperationHandler();
 
         // Start 3 workers threads
         ArrayList<Thread> threads = new ArrayList<>();
@@ -89,21 +88,19 @@ public class Worker implements Runnable {
                     Object o = parser.parse(job.body());
                     JSONObject obj = (JSONObject) o;
 
-                    //Pair<Integer, LinkedList<String>> res = processReview((String) obj.get("text"));
-
-                    // TODO: change this line so worker does the work
-                    String changed = (String) obj.get("origin");
+                    String pdf_url = (String) obj.get("origin");
+                    String operation = (String) obj.get("operation");
+                    String input_line = operation + "\t" + pdf_url;
+                    String output = handler.work(input_line);
 
                     JSONObject report = new JSONObject();
                     report.put("origin", obj.get("origin"));
                     report.put("operation", obj.get("operation"));
-                    report.put("changed", changed);
+                    report.put("changed", output); // TODO: change the output of work to only the output file location or error msg
 
                     result = report.toJSONString();
 
-
-                    //result = handler.work(job.body());
-                } catch (ParseException e) {
+                } catch (ParseException | IOException e) {
                     throw new RuntimeException("\nThe job " + job_name + " failed...\nError: " + e.getMessage());
                 }
 

@@ -96,14 +96,14 @@ public class AMIService {
     public String createInstance(String name, String userData) {
         // IAM role. Gives accreditations to the new instance
         IamInstanceProfileSpecification role = IamInstanceProfileSpecification.builder()
-                .name("EMR_EC2_DefaultRole")   // Contain policies for EC2, SQS and S3
+                .name("LabInstanceProfile")   // Contain policies for EC2, SQS and S3
                 .build();
 
         // The workers need to run on T2_LARGE instances because of the NLP libraries that requires a lot of memory
-        InstanceType type = name.contains("manager") ? InstanceType.T2_MEDIUM : InstanceType.T2_LARGE;
+        InstanceType type = name.contains("manager") ? InstanceType.T2_SMALL : InstanceType.T2_SMALL;
 
         // AMI with Java
-        String amiId = "ami-0009c3f63fca71e34";
+        String amiId = "ami-00e95a9222311e8ed";
 
         RunInstancesRequest runRequest = RunInstancesRequest
                 .builder()
@@ -112,9 +112,9 @@ public class AMIService {
                 .maxCount(1)                                // Max number of instances to create (in our case 1)
                 .minCount(1)                                // Min number of instances to create (in our case 1)
                 .userData(userData)                         // User data -> bash code to run during initialization
-          //      .keyName("ec2-java-ssh")                    // SSH to access to the instance when created
-          //      .securityGroupIds("sg-71a41f2b")            // Security group (what ports and protocols are available)
-          //      .iamInstanceProfile(role)                   // Policies
+                .keyName("vockey")                          // SSH to access to the instance when created
+                .securityGroupIds("sg-0b8a628d851e6e894")            // Security group (what ports and protocols are available)
+                .iamInstanceProfile(role)                   // Policies
                 .build();
 
 

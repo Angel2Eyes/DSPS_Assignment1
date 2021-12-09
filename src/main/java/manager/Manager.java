@@ -206,19 +206,24 @@ public class Manager {
          * Read and part the reviews from the input file
          *
          * @param file Location of the input files
-         * @return A list of all the reviews for the workers to process
+         * @return A list of all the PDFs for the workers to process
          * @throws IOException    The {@code file} is missing
          * @throws ParseException The {@code file} isn't a JSON
          */
         private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
             LinkedList<String> jobs = new LinkedList<>();
 
-            JSONParser parser = new JSONParser();
+            //JSONParser parser = new JSONParser();
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line = reader.readLine();
             while (line != null) {
-                JSONArray reviews = (JSONArray) ((JSONObject) parser.parse(line)).get("reviews");
-                for (Object o : reviews) jobs.add(((JSONObject) o).toJSONString());
+                String[] words = line.split(" ", -1);
+                JSONObject obj = new JSONObject();
+                obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
+                obj.put("original", words[1]);
+                jobs.add(obj.toJSONString());
+                // JSONArray reviews = (JSONArray) ((JSONObject) parser.parse(line)).get("reviews");
+                // for (Object o : reviews) jobs.add(((JSONObject) o).toJSONString());
                 line = reader.readLine();
             }
             reader.close();
@@ -286,7 +291,7 @@ public class Manager {
                 Object o = parser.parse(jsonString);
                 JSONObject obj = (JSONObject) o;
 
-                review_file_location = (String) obj.get("review-file-location");
+                review_file_location = (String) obj.get("PDF-file-location");
                 task_id = (String) obj.get("task-id");
                 N = (Long) obj.get("N");
                 terminate = (boolean) obj.get("terminate");
@@ -423,9 +428,9 @@ public class Manager {
 
     public static String getUserData(String bucketName) {
         String cmd = "#! /bin/bash" + '\n' +
-                "wget https://" + bucketName + ".s3.amazonaws.com/services-manager" + '\n' +
-                "wget https://" + bucketName + ".s3.amazonaws.com/Manager.jar" + '\n' +
-                "java -jar Manager.jar > logger" + '\n';
+                "sudo wget https://" + bucketName + ".s3.amazonaws.com/services-manager" + '\n' +
+                "sudo wget https://" + bucketName + ".s3.amazonaws.com/Manager.jar" + '\n' +
+                "sudo java -jar Manager.jar > logger" + '\n';
         return Base64.getEncoder().encodeToString(cmd.getBytes());
     }
 }

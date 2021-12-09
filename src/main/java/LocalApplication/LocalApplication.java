@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
-import org.javatuples.Quartet;
+import org.javatuples.Triplet;
 
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -47,10 +47,10 @@ public class LocalApplication {
         SimpleQueueService sqs_from_manager = new SimpleQueueService("queue-from-manager");
 
         // 1. Upload Manager code to S3
- //       s3.uploadFile("target/Manager/Manager.jar", "Manager.jar");
+        //s3.uploadFile("target/Manager/Manager.jar", "Manager.jar");
 
         // 2. Upload Worker code to S3
-  //      s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
+        s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
 
         // 3. Upload Input File for Manager
         s3.uploadFile("Input_Files/" + inputFileName + ".txt", "input-" + id);
@@ -149,7 +149,7 @@ public class LocalApplication {
         messageAttributes.put("Type", typeAttribute);
 
         JSONObject toSend = new JSONObject();
-        toSend.put("review-file-location", "input-" + id);
+        toSend.put("PDF-file-location", "input-" + id);
         toSend.put("task-id", "task-" + id);
         toSend.put("N", N);
         toSend.put("terminate", terminate);
@@ -191,15 +191,15 @@ public class LocalApplication {
         Object jsonObj;
         String jsonLine = sourceReader.readLine();
 
-        LinkedList<Quartet<String, Integer, Integer, String>> reviews = new LinkedList<>();
+        LinkedList<Triplet<String, String, String>> changes = new LinkedList<>();
         while (jsonLine != null) {
             jsonObj = parser.parse(jsonLine);
             JSONObject jsonObject = (JSONObject) jsonObj;
-            String link = (String) jsonObject.get("link");
-            int sentiment = ((Long) jsonObject.get("sentiment")).intValue();
-            int rating = ((Long) jsonObject.get("rating")).intValue();
-            String entities = (String) jsonObject.get("entities");
-            reviews.add(new Quartet<>(link, rating, sentiment, entities));
+            String operation = (String) jsonObject.get("operation");
+            String original = (String) jsonObject.get("original");
+            String changed = (String) jsonObject.get("changed");
+
+            changes.add(new Triplet<>(operation, original, changed));
             jsonLine = sourceReader.readLine();
         }
         sourceReader.close();
@@ -218,27 +218,31 @@ public class LocalApplication {
                                         "td {font-size: 20px;}\n\t\t" +
                                         "tr:nth-child(even) {background-color: #f2f2f2;}"),
                                 body(
-                                        h1("Classification of the Amazon reviews"),
+                                        h1("Table of Changed PDFs"),
                                         br(),
                                         table(
                                                 tr(
-                                                        th("Link")
+                                                        th("Operation")
+                                                                .withStyle("width: 20%;"),
+                                                        th("Original")
                                                                 .withStyle("width: 45%;"),
-                                                        th("Entities")
-                                                                .withStyle("width: 35%;"),
-                                                        th("Sarcasm Detection")
-                                                                .withStyle("width: 20%;")
+                                                        th("Changed")
+                                                                .withStyle("width: 45%;")
                                                 ),
-                                                each(reviews, review ->
+                                                each(changes, change ->
                                                         tr(
+                                                                td(change.getValue0()),
                                                                 td(
-                                                                        a(review.getValue0().split("/ref")[0])
-                                                                                .withStyle("color:" + getColor(review.getValue2()))
+                                                                        a(change.getValue1().split("/ref")[0])
                                                                                 .withTarget("_blank")
-                                                                                .withHref(review.getValue0())
+                                                                                .withHref(change.getValue0())
                                                                 ),
-                                                                td(review.getValue3()),
-                                                                td(b(isSarcasm(review.getValue1(), review.getValue2())))
+
+                                                                td(
+                                                                        a(change.getValue2().split("/ref")[0])
+                                                                                .withTarget("_blank")
+                                                                                .withHref(change.getValue0())
+                                                                )
                                                         )
                                                 )
                                         )

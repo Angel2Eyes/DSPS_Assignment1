@@ -19,7 +19,7 @@ public class Worker implements Runnable {
     private static String sqs_to_manager_name;
     private static String sqs_from_manager_name;
 
-    private static ReviewAnalysisHandler handler;
+    //private static ReviewAnalysisHandler handler;
 
     public static void main(String[] args) throws IOException, ParseException {
         // Get the names of the AWS instances
@@ -36,7 +36,7 @@ public class Worker implements Runnable {
         sqs_from_manager_name = (String) jsonObj.get("sqs-from-manager");
 
         // Initialize the Review Analysis Handler
-        handler = new ReviewAnalysisHandler();
+        //handler = new ReviewAnalysisHandler();
 
         // Start 3 workers threads
         ArrayList<Thread> threads = new ArrayList<>();
@@ -84,7 +84,25 @@ public class Worker implements Runnable {
 
                 String result;
                 try {
-                    result = handler.work(job.body());
+
+                    JSONParser parser = new JSONParser();
+                    Object o = parser.parse(job.body());
+                    JSONObject obj = (JSONObject) o;
+
+                    //Pair<Integer, LinkedList<String>> res = processReview((String) obj.get("text"));
+
+                    // TODO: change this line so worker does the work
+                    String changed = (String) obj.get("origin");
+
+                    JSONObject report = new JSONObject();
+                    report.put("origin", obj.get("origin"));
+                    report.put("operation", obj.get("operation"));
+                    report.put("changed", changed);
+
+                    result = report.toJSONString();
+
+
+                    //result = handler.work(job.body());
                 } catch (ParseException e) {
                     throw new RuntimeException("\nThe job " + job_name + " failed...\nError: " + e.getMessage());
                 }
@@ -127,9 +145,9 @@ public class Worker implements Runnable {
 
     public static String getUserData(String bucket) {
         String cmd = "#! /bin/bash" + '\n' +
-                "wget -O services-worker https://" + bucket + ".s3.amazonaws.com/services-worker" + '\n' +
-                "wget https://" + bucket + ".s3.amazonaws.com/Worker.jar" + '\n' +
-                "java -jar Worker.jar > logger" + '\n';
+                "sudo wget -O services-worker https://" + bucket + ".s3.amazonaws.com/services-worker" + '\n' +
+                "sudo wget https://" + bucket + ".s3.amazonaws.com/Worker.jar" + '\n' +
+                "sudo java -jar Worker.jar > logger" + '\n';
         return Base64.getEncoder().encodeToString(cmd.getBytes());
     }
 }

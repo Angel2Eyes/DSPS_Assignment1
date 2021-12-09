@@ -52,31 +52,31 @@
         </dependency>
 
 
-        <!-- Dependencies for sarcasm analysis -->
-        <dependency>
-            <groupId>edu.stanford.nlp</groupId>
-            <artifactId>stanford-corenlp</artifactId>
-            <version>3.3.0</version>
-        </dependency>
+<!--        &lt;!&ndash; Dependencies for sarcasm analysis &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>edu.stanford.nlp</groupId>-->
+<!--            <artifactId>stanford-corenlp</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>edu.stanford.nlp</groupId>
-            <artifactId>stanford-corenlp</artifactId>
-            <version>3.3.0</version>
-            <classifier>models</classifier>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>edu.stanford.nlp</groupId>-->
+<!--            <artifactId>stanford-corenlp</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--            <classifier>models</classifier>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>de.jollyday</groupId>
-            <artifactId>jollyday</artifactId>
-            <version>0.4.7</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>de.jollyday</groupId>-->
+<!--            <artifactId>jollyday</artifactId>-->
+<!--            <version>0.4.7</version>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>com.googlecode.efficient-java-matrix-library</groupId>
-            <artifactId>ejml</artifactId>
-            <version>0.23</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.googlecode.efficient-java-matrix-library</groupId>-->
+<!--            <artifactId>ejml</artifactId>-->
+<!--            <version>0.23</version>-->
+<!--        </dependency>-->
 
         <!-- SLF4J -->
         <dependency>
@@ -164,7 +164,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>Manager.Manager</mainClass>
+                                    <mainClass>manager.Manager</mainClass>
                                 </transformer>
                             </transformers>
                             <finalName>Manager</finalName>
@@ -179,7 +179,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>Worker.Worker</mainClass>
+                                    <mainClass>worker.Worker</mainClass>
                                 </transformer>
                             </transformers>
                             <finalName>Worker</finalName>

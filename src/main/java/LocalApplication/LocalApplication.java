@@ -51,11 +51,11 @@ public class LocalApplication {
         s3.uploadFile("target/Manager/Manager.jar", "Manager.jar");
 
         // 2. Upload Worker code to S3
-        //s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
+        s3.uploadFile("target/Worker/Worker.jar", "Worker.jar");
 
         // 3. Upload Input File for Manager
-        textToJSON("Input_Files/" + inputFileName + ".txt", "Input_Files/" + inputFileName + "_json.txt");
-        s3.uploadFile("Input_Files/" + inputFileName + "_json.txt", "input-" + id);
+        textToJSON("Input_Files/" + inputFileName + ".txt", "Input_Files/" + inputFileName + "-json.json");
+        s3.uploadFile("Input_Files/" + inputFileName + "-json.json", "input-" + id);
 
         // 4. Upload services location to s3 for the manager
         FileUtils.deleteQuietly(new File("services-manager"));
@@ -90,7 +90,7 @@ public class LocalApplication {
 
         // 9. Create html report
         System.out.println("\nCreating HTML report for: " + "report-JSON-" + id);
-        writeReport("report-JSON-" + id, outputFileName);
+        //writeReport("report-JSON-" + id, outputFileName);
 
         // 10. Delete input and output files from s3
         s3.deleteFile("input-" + id);
@@ -120,8 +120,8 @@ public class LocalApplication {
         }
 
         // 12. Open report in browser
-        File htmlFile = new File(outputFileName + ".html");
-        Desktop.getDesktop().browse(htmlFile.toURI());
+//        File htmlFile = new File(outputFileName + ".html");
+//        Desktop.getDesktop().browse(htmlFile.toURI());
     }
 
     private static Message getMessage(String id, SimpleQueueService sqs_from_manager) {
@@ -298,9 +298,25 @@ public class LocalApplication {
             task_id = (String) obj.get("task-id");
         }
     }
-    private static void textToJSON(String source, String destination) throws IOException, ParseException {
+//    private static void textToJSON(String source, String destination) throws IOException, ParseException {
+//        BufferedReader sourceReader = new BufferedReader(new FileReader(source));
+//        PrintWriter pw = new PrintWriter(destination);
+//        JSONArray jsonArray = new JSONArray();
+//        String line = sourceReader.readLine();
+//        while (line != null) {
+//            String[] words = line.split("\t", -1);
+//            JSONObject obj = new JSONObject();
+//            obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
+//            obj.put("original", words[1]);
+//            jsonArray.add(obj.toJSONString());
+//            line = sourceReader.readLine();
+//            pw.println(obj.toString());
+//        }
+//        pw.close();
+//        sourceReader.close();
+//    }
+    private static void textToJSON(String source, String destination) throws IOException {
         BufferedReader sourceReader = new BufferedReader(new FileReader(source));
-        PrintWriter pw = new PrintWriter(destination);
         JSONArray jsonArray = new JSONArray();
         String line = sourceReader.readLine();
         while (line != null) {
@@ -308,12 +324,20 @@ public class LocalApplication {
             JSONObject obj = new JSONObject();
             obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
             obj.put("original", words[1]);
-            jsonArray.add(obj.toJSONString());
+            jsonArray.add(obj);
             line = sourceReader.readLine();
-            pw.println(obj.toString());
         }
-        pw.close();
         sourceReader.close();
+        //Write JSON file
+        try {
+            FileWriter file = new FileWriter(destination);
+            //We can write any JSONArray or JSONObject instance to the file
+            file.write(jsonArray.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

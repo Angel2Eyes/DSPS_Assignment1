@@ -2,6 +2,7 @@ package worker;
 
 import awsService.SimpleQueueService;
 
+import awsService.StorageService;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -45,10 +46,11 @@ public class Worker implements Runnable {
             threads.add(t);
         }
 
-        // We run 5 threads simultaneously to maximize working speed
-        // Everytime a thread fails, we start another one. Note that if a thread indeed fails,
-        // the job it was doing will be handled by another thread or another computer because it wouldn't have been deleted
-        // If the error is due to a QueueDoesNotExistException that means the manager has failed hence terminate the worker
+        // We run 5 threads simultaneously to maximize working speed.
+        // Every time a thread fails, we start another one.
+        // If a thread indeed fails, the job it was doing will be handled by another thread or another computer,
+        // because it wouldn't have been deleted.
+        // If the error is due to a QueueDoesNotExistException that means the manager has failed hence terminate the worker.
         while (!threads.isEmpty()) {
             for (Thread t : threads) {
                 try {
@@ -74,38 +76,43 @@ public class Worker implements Runnable {
 
         while (true) {
             // Fetch the next pending task (Review)
-            List<Message> jobs = sqs_from_manager.nextMessages(1800, 10);    // 30 minutes
+            List<Message> jobs = sqs_from_manager.nextMessages(60, 10);
 
             for (Message job : jobs) {
+                //System.out.printf("\njob = " + job.toString());
                 String job_name = job.messageAttributes().get("Name").stringValue();
                 String sender = job.messageAttributes().get("Sender").stringValue();
                 System.out.printf("\nJob Received: %s\tFrom: %s\n", job_name, sender);
 
                 String result;
                 try {
-
-                    JSONParser parser = new JSONParser();
-                    Object o = parser.parse(job.body());
-                    JSONObject obj = (JSONObject) o;
-
-                    String pdf_url = (String) obj.get("origin");
-                    String operation = (String) obj.get("operation");
-                    String input_line = operation + "\t" + pdf_url;
-                    String output = handler.work(input_line);
-
+                    System.out.printf("\njob.body = " + job.body());
+//                    JSONParser parser = new JSONParser();
+//                    Object o = parser.parse(job.body());
+//                    JSONObject obj = (JSONObject) o;
+//                    String pdf_url = (String) obj.get("origin");
+//                    System.out.printf("\npdf_url = " + pdf_url);
+//                    String operation = (String) obj.get("operation");
+//                    System.out.printf("\noperation = " + operation);
+//                    String input_line = operation + "\t" + pdf_url;
+                    String[] input_line_arr = job.body().split("\t");
+                    System.out.printf("\ninitiating handler.work for " + job_name);
+                    String output = handler.work(job.body());
+                    System.out.printf("\nfinished handler.work of " + job_name);
                     JSONObject report = new JSONObject();
-                    report.put("origin", obj.get("origin"));
-                    report.put("operation", obj.get("operation"));
-                    report.put("changed", output); // TODO: change the output of work to only the output file location or error msg
-
+                    report.put("origin", input_line_arr[1]);
+                    report.put("operation", input_line_arr[0]);
+                    report.put("changed", output);
                     result = report.toJSONString();
+                    System.out.printf("\ncreated report of " + job_name);
 
-                } catch (ParseException | IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException("\nThe job " + job_name + " failed...\nError: " + e.getMessage());
                 }
 
                 // Send a message with the result
                 assert result != null;
+                System.out.printf("\nsending result of " + job_name);
                 sendResult(sqs_to_manager, job_name, sender, result);
 
                 // Remove the executed task from the queue

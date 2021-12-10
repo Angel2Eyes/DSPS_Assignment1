@@ -229,20 +229,47 @@ public class Manager {
 //            reader.close();
 //            return jobs;
 //        }
-        private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
-            LinkedList<String> jobs = new LinkedList<String>();
-            JSONParser parser = new JSONParser();
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line = reader.readLine();
-            while (line != null) {
-                Object obj =  parser.parse(line);
-                jobs.add(((JSONObject)obj).toJSONString());
-                line = reader.readLine();
+//        private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
+//            LinkedList<String> jobs = new LinkedList<>();
+//            JSONParser parser = new JSONParser();
+//            BufferedReader reader = new BufferedReader(new FileReader(file));
+//            String line = reader.readLine();
+//            while (line != null) {
+//                Object obj =  parser.parse(line);
+//                jobs.add(((JSONObject)obj).toJSONString());
+//                line = reader.readLine();
+//            }
+//            reader.close();
+//            return jobs;
+//        }
+        private static LinkedList<String> loadJobs(String file) throws IOException, ParseException {
+            LinkedList<String> jobs = new LinkedList<>();
+            JSONParser jsonParser = new JSONParser();
+
+            try {
+                FileReader reader = new FileReader(file);
+                //Read JSON file
+                Object obj = jsonParser.parse(reader);
+                JSONArray jobsList = (JSONArray) obj;
+                System.out.println(jobsList);
+
+                String parsed_job;
+                for (Object job:jobsList) {
+                    parsed_job = parseJobObject((JSONObject) job);
+                    jobs.add(parsed_job);
+                }
             }
-            reader.close();
+            catch (ParseException | IOException e) {
+                e.printStackTrace();
+            }
             return jobs;
         }
-
+        private static String parseJobObject(JSONObject job)
+        {
+            String operation = (String) job.get("operation");
+            String url = (String) job.get("original");
+            return  operation + "\t" + url;
+        }
         private void sendNewJob(String task_id, String line) {
             Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
             MessageAttributeValue taskNameAttribute = MessageAttributeValue.builder()
@@ -260,7 +287,6 @@ public class Manager {
             messageAttributes.put("Name", taskNameAttribute);
             messageAttributes.put("Sender", senderAttribute);
             messageAttributes.put("Type", jobAttribute);
-
 
             sqs_to_workers.sendMessage(SendMessageRequest.builder()
                     .messageBody(line)

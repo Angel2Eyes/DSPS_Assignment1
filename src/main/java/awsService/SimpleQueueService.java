@@ -89,7 +89,7 @@ public class SimpleQueueService {
                 .build();
 
         sqs.sendMessage(request);
-        System.out.println("Message sent: " + request.messageAttributes().get("Name").stringValue());
+        System.out.println("Message sent: " + request.messageAttributes().get("Name").stringValue() + "\nMessage Info: " + request.toString());
     }
 
     /**

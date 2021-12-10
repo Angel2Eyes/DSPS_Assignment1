@@ -100,7 +100,7 @@ public class AMIService {
                 .build();
 
         // The workers need to run on T2_LARGE instances because of the NLP libraries that requires a lot of memory
-        InstanceType type = name.contains("manager") ? InstanceType.T2_SMALL : InstanceType.T2_SMALL;
+        InstanceType type = name.contains("manager") ? InstanceType.T2_SMALL : InstanceType.T2_MEDIUM;
 
         // AMI with Java
         String amiId = "ami-00e95a9222311e8ed";

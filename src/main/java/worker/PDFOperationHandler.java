@@ -27,7 +27,7 @@ public class PDFOperationHandler {
 
     }
 
-    public String work(String input_line) throws IOException {
+    public String work(String input_line, String job_name) throws IOException {
         System.out.printf("\nInitiating S3");
         StorageService s3 = new StorageService("bucket-dsps1");
         String output = "";
@@ -38,6 +38,9 @@ public class PDFOperationHandler {
         }
         String operation = input_line.substring(0, tab_index);
         String pdf_url = input_line.substring(tab_index + 1);
+        // Replacing spaces with %20:
+        pdf_url = pdf_url.replace(" ", "%20");
+        //
         System.out.printf("\nTrying to Read PDF file");
         try {
             // Get the PDF file from URL to local file
@@ -49,19 +52,18 @@ public class PDFOperationHandler {
             else {
                 PDDocument doc = Loader.loadPDF(file);
                 String file_name_no_suffix = file.getName().substring(0, file.getName().length() - 4);
+                file_name_no_suffix = file_name_no_suffix.replace("%20", "-");
                 if (operation.equals("ToText")) {
                     System.out.printf("\nChanging PDF to text");
                     PDFTextStripper pdfStripper = new PDFTextStripper();
                     pdfStripper.setStartPage(1);
                     pdfStripper.setEndPage(1);
                     String parsedText = pdfStripper.getText(doc);
-                    PrintWriter pw = new PrintWriter(file_name_no_suffix + ".txt");
+                    PrintWriter pw = new PrintWriter(job_name + "-" + file_name_no_suffix + ".txt");
                     pw.print(parsedText);
                     pw.close();
-                    System.out.printf("\nUploading to S3");
-                    s3.uploadFile(file_name_no_suffix + ".txt", file_name_no_suffix + ".txt");
-                    System.out.printf("\nFinished upload to S3");
-                    output = file_name_no_suffix + ".txt";
+                    s3.uploadFile(job_name + "-" + file_name_no_suffix + ".txt", job_name + "-" + file_name_no_suffix + ".txt");
+                    output = "https://bucket-dsps1.s3.amazonaws.com/" + job_name + "-" + file_name_no_suffix + ".txt";
                 } else {
                     if (operation.equals("ToHTML")) {
                         System.out.printf("\nChanging PDF to html");
@@ -69,23 +71,19 @@ public class PDFOperationHandler {
                         converter.setStartPage(1);
                         converter.setEndPage(1);
                         String html = converter.getText(doc); // That's it!
-                        PrintWriter pw = new PrintWriter(file_name_no_suffix + ".html");
+                        PrintWriter pw = new PrintWriter(job_name + "-" + file_name_no_suffix + ".html");
                         pw.print(html);
                         pw.close();
-                        System.out.printf("\nUploading to S3");
-                        s3.uploadFile(file_name_no_suffix + ".html", file_name_no_suffix + ".html");
-                        System.out.printf("\nFinished upload to S3");
-                        output = file_name_no_suffix + ".html";
+                        s3.uploadFile(job_name + "-" + file_name_no_suffix + ".html", job_name + "-" + file_name_no_suffix + ".html");
+                        output = "https://bucket-dsps1.s3.amazonaws.com/" + job_name + "-" + file_name_no_suffix + ".html";
                     } else {
                         if (operation.equals("ToImage")) {
                             System.out.printf("\nChanging PDF to image");
                             PDFRenderer pdfRenderer = new PDFRenderer(doc);
                             BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
-                            ImageIOUtil.writeImage(bim, file_name_no_suffix + ".png", 300);
-                            System.out.printf("\nUploading to S3");
-                            s3.uploadFile(file_name_no_suffix + ".png", file_name_no_suffix + ".png");
-                            System.out.printf("\nFinished upload to S3");
-                            output = file_name_no_suffix + ".png";
+                            ImageIOUtil.writeImage(bim, job_name + "-" + file_name_no_suffix + ".png", 300);
+                            s3.uploadFile(job_name + "-" + file_name_no_suffix + ".png", job_name + "-" + file_name_no_suffix + ".png");
+                            output ="https://bucket-dsps1.s3.amazonaws.com/" + job_name + "-" + file_name_no_suffix + ".png";
                         } else {
                             output = "Input not valid: Operation is not supported";
                         }

@@ -37,8 +37,9 @@ public class Worker implements Runnable {
 
         // Initialize the Review Analysis Handler
         handler = new PDFOperationHandler();
+        System.out.printf("\nInitialized PDF handler");
 
-        // Start 3 workers threads
+        // Start Worker's threads
         ArrayList<Thread> threads = new ArrayList<>();
         for (int i = 0; i < 3; ++i) {
             Thread t = new Thread(new Worker());
@@ -70,34 +71,25 @@ public class Worker implements Runnable {
 
     @Override
     public void run() {
+        System.out.printf("\nWorker Thread Starting...");
         // Initialize the AWS SQS instances
         SimpleQueueService sqs_to_manager = new SimpleQueueService(sqs_to_manager_name);
         SimpleQueueService sqs_from_manager = new SimpleQueueService(sqs_from_manager_name);
 
         while (true) {
             // Fetch the next pending task (Review)
-            List<Message> jobs = sqs_from_manager.nextMessages(60, 10);
-
+            List<Message> jobs = sqs_from_manager.nextMessages(600, 10);
+            System.out.printf("\nReceived " + jobs.size() + " Jobs");
             for (Message job : jobs) {
-                //System.out.printf("\njob = " + job.toString());
                 String job_name = job.messageAttributes().get("Name").stringValue();
                 String sender = job.messageAttributes().get("Sender").stringValue();
                 System.out.printf("\nJob Received: %s\tFrom: %s\n", job_name, sender);
 
                 String result;
                 try {
-                    System.out.printf("\njob.body = " + job.body());
-//                    JSONParser parser = new JSONParser();
-//                    Object o = parser.parse(job.body());
-//                    JSONObject obj = (JSONObject) o;
-//                    String pdf_url = (String) obj.get("origin");
-//                    System.out.printf("\npdf_url = " + pdf_url);
-//                    String operation = (String) obj.get("operation");
-//                    System.out.printf("\noperation = " + operation);
-//                    String input_line = operation + "\t" + pdf_url;
                     String[] input_line_arr = job.body().split("\t");
                     System.out.printf("\ninitiating handler.work for " + job_name);
-                    String output = handler.work(job.body());
+                    String output = handler.work(job.body(), job_name);
                     System.out.printf("\nfinished handler.work of " + job_name);
                     JSONObject report = new JSONObject();
                     report.put("origin", input_line_arr[1]);
@@ -117,7 +109,7 @@ public class Worker implements Runnable {
 
                 // Remove the executed task from the queue
                 sqs_from_manager.deleteMessage(job);
-                System.out.println("Job Completed: " + job_name);
+                System.out.println("\nJob Completed: " + job_name);
             }
         }
     }

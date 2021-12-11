@@ -90,7 +90,7 @@ public class LocalApplication {
 
         // 9. Create html report
         System.out.println("\nCreating HTML report for: " + "report-JSON-" + id);
-        //writeReport("report-JSON-" + id, outputFileName);
+        writeReport("report-JSON-" + id, "Output_Files/" + outputFileName, s3.getBucketName());
 
         // 10. Delete input and output files from s3
         s3.deleteFile("input-" + id);
@@ -119,9 +119,9 @@ public class LocalApplication {
             manager.terminate();
         }
 
-        // 12. Open report in browser
-//        File htmlFile = new File(outputFileName + ".html");
-//        Desktop.getDesktop().browse(htmlFile.toURI());
+        // 13. Open report in browser
+        File htmlFile = new File("Output_Files/" + outputFileName + ".html");
+        Desktop.getDesktop().browse(htmlFile.toURI());
     }
 
     private static Message getMessage(String id, SimpleQueueService sqs_from_manager) {
@@ -185,8 +185,7 @@ public class LocalApplication {
                 .messageAttributes(messageAttributes)
         );
     }
-
-    private static void writeReport(String source, String destination) throws IOException, ParseException {
+    private static void writeReport(String source, String destination, String bucket_name) throws IOException, ParseException {
 
         BufferedReader sourceReader = new BufferedReader(new FileReader(source));
         JSONParser parser = new JSONParser();
@@ -198,7 +197,7 @@ public class LocalApplication {
             jsonObj = parser.parse(jsonLine);
             JSONObject jsonObject = (JSONObject) jsonObj;
             String operation = (String) jsonObject.get("operation");
-            String original = (String) jsonObject.get("original");
+            String original = (String) jsonObject.get("origin");
             String changed = (String) jsonObject.get("changed");
 
             changes.add(new Triplet<>(operation, original, changed));
@@ -237,13 +236,13 @@ public class LocalApplication {
                                                                 td(
                                                                         a(change.getValue1().split("/ref")[0])
                                                                                 .withTarget("_blank")
-                                                                                .withHref(change.getValue0())
+                                                                                .withHref(change.getValue1().split("/ref")[0])
                                                                 ),
 
                                                                 td(
                                                                         a(change.getValue2().split("/ref")[0])
                                                                                 .withTarget("_blank")
-                                                                                .withHref(change.getValue0())
+                                                                                .withHref(change.getValue2().split("/ref")[0])
                                                                 )
                                                         )
                                                 )
@@ -260,10 +259,6 @@ public class LocalApplication {
         writer.write(report);
         writer.close();
         System.out.println("Report ready: " + destination + ".html");
-    }
-
-    private static String isSarcasm(int value1, int value2) {
-        return Math.abs(value1 - value2) > 1 ? "Sarcasm" : "No Sarcasm";
     }
 
     private static String getColor(int sentiment) {

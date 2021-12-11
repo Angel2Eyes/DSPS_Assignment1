@@ -15,6 +15,8 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.*;
 
 public class Manager {
@@ -119,7 +121,7 @@ public class Manager {
         public void run() {
             while (!stop_manager) {
                 // Fetch the next pending task
-                Message message = sqs_from_local.nextMessages(120, 1).get(0); // 2 min
+                Message message = sqs_from_local.nextMessages(180, 1).get(0); // 3 min
                 try {
                     switch (message.messageAttributes().get("Type").stringValue()) {
                         case "Task":
@@ -131,14 +133,17 @@ public class Manager {
                         default:
                             System.err.println("Wrong message form:" + message.body());
                     }
+                    System.out.printf("\n*** Deleting message... ***");
                     sqs_from_local.deleteMessage(message);
                 } catch (Exception e) {
                     if (!stop_accepting_new_tasks) {
                         System.err.println("\nERROR: " + e.getMessage());
+                        System.out.printf("\n*** ERROR: " + e.getMessage() + " ***");
                         e.printStackTrace(System.err);
                     }
                 }
             }
+            System.out.printf("\n*** Deleting to_workers queue... ***");
             sqs_to_workers.deleteQueue();
         }
 
@@ -181,6 +186,7 @@ public class Manager {
             LinkedList<String> jobs = loadJobs("input-" + task_id);
 
             // Save the number of jobs remaining to complete the task
+            System.out.printf("\nnumberOfJobs = " + jobs.size());
             int numberOfJobs = jobs.size();
             JOBS_HOLDER.put(task_id, numberOfJobs);
             updateJobPending(numberOfJobs);
@@ -198,8 +204,12 @@ public class Manager {
             System.out.print("\n"); // Empty line
 
             // Send job requests to workers
-            for (String job : jobs)
+            Collections.shuffle(jobs);
+            for (String job : jobs) {
+                System.out.printf("\nSending job: " + job);
                 sendNewJob(task_id, job);
+            }
+            System.out.printf("\n*** Finished handleNewTask ***");
         }
 
         /**
@@ -210,38 +220,6 @@ public class Manager {
          * @throws IOException    The {@code file} is missing
          * @throws ParseException The {@code file} isn't a JSON
          */
-//        private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
-//            LinkedList<String> jobs = new LinkedList<>();
-//
-//            //JSONParser parser = new JSONParser();
-//            BufferedReader reader = new BufferedReader(new FileReader(file));
-//            String line = reader.readLine();
-//            while (line != null) {
-//                String[] words = line.split(" ", -1);
-//                JSONObject obj = new JSONObject();
-//                obj.put("operation", words[0]); // put into json {"toText" : "http://www.chabad.org/media/pdf/42/kUgi423322.pdf"} for example
-//                obj.put("original", words[1]);
-//                jobs.add(obj.toJSONString());
-//                // JSONArray reviews = (JSONArray) ((JSONObject) parser.parse(line)).get("reviews");
-//                // for (Object o : reviews) jobs.add(((JSONObject) o).toJSONString());
-//                line = reader.readLine();
-//            }
-//            reader.close();
-//            return jobs;
-//        }
-//        private LinkedList<String> loadJobs(String file) throws IOException, ParseException {
-//            LinkedList<String> jobs = new LinkedList<>();
-//            JSONParser parser = new JSONParser();
-//            BufferedReader reader = new BufferedReader(new FileReader(file));
-//            String line = reader.readLine();
-//            while (line != null) {
-//                Object obj =  parser.parse(line);
-//                jobs.add(((JSONObject)obj).toJSONString());
-//                line = reader.readLine();
-//            }
-//            reader.close();
-//            return jobs;
-//        }
         private static LinkedList<String> loadJobs(String file) throws IOException, ParseException {
             LinkedList<String> jobs = new LinkedList<>();
             JSONParser jsonParser = new JSONParser();
@@ -256,6 +234,11 @@ public class Manager {
                 String parsed_job;
                 for (Object job:jobsList) {
                     parsed_job = parseJobObject((JSONObject) job);
+                    // editing %20 symbols:
+                    String parsed_job_url = parsed_job.substring(parsed_job.indexOf("\t") + 1);
+                    String parsed_job_url_utf8 = URLDecoder.decode(parsed_job_url, "UTF-8");
+                    //
+                    parsed_job = parsed_job.substring(0, parsed_job.indexOf("\t") + 1) + parsed_job_url_utf8;
                     jobs.add(parsed_job);
                 }
             }

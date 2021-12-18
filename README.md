@@ -2,9 +2,6 @@
 
 First assignment in the course DSPS 2022A - Introduction to AWS in Java
 
-Yuval Saar - 304999261
-Ilay Nuriel - 312538580
-
 1. [Description](#description)
 2. [Run + Results](#run--results)
 2. [EC2 parameters](#ec2-parameters)
